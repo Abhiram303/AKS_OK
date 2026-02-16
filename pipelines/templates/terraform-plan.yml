@@ -1,0 +1,30 @@
+parameters:
+  - name: workingDirectory
+    type: string
+  - name: varFile
+    type: string
+    default: 'terraform.tfvars'
+
+steps:
+  - task: TerraformTaskV4@4
+    displayName: 'Terraform Validate'
+    inputs:
+      provider: 'azurerm'
+      command: 'validate'
+      workingDirectory: '${{ parameters.workingDirectory }}'
+
+  - task: TerraformTaskV4@4
+    displayName: 'Terraform Plan'
+    inputs:
+      provider: 'azurerm'
+      command: 'plan'
+      workingDirectory: '${{ parameters.workingDirectory }}'
+      commandOptions: '-var-file="${{ parameters.varFile }}" -out=tfplan'
+      environmentServiceNameAzureRM: '$(serviceConnection)'
+
+  - task: PublishPipelineArtifact@1
+    displayName: 'Publish Terraform Plan'
+    inputs:
+      targetPath: '${{ parameters.workingDirectory }}/tfplan'
+      artifact: 'tfplan'
+      publishLocation: 'pipeline'

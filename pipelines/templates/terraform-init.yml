@@ -1,0 +1,30 @@
+parameters:
+  - name: workingDirectory
+    type: string
+  - name: backendResourceGroup
+    type: string
+  - name: backendStorageAccount
+    type: string
+  - name: backendContainerName
+    type: string
+    default: 'tfstate'
+  - name: backendKey
+    type: string
+
+steps:
+  - task: TerraformInstaller@0
+    displayName: 'Install Terraform'
+    inputs:
+      terraformVersion: '1.5.7'
+
+  - task: TerraformTaskV4@4
+    displayName: 'Terraform Init'
+    inputs:
+      provider: 'azurerm'
+      command: 'init'
+      workingDirectory: '${{ parameters.workingDirectory }}'
+      backendServiceArm: '$(serviceConnection)'
+      backendAzureRmResourceGroupName: '${{ parameters.backendResourceGroup }}'
+      backendAzureRmStorageAccountName: '${{ parameters.backendStorageAccount }}'
+      backendAzureRmContainerName: '${{ parameters.backendContainerName }}'
+      backendAzureRmKey: '${{ parameters.backendKey }}'

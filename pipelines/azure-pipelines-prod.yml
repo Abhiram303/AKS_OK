@@ -1,0 +1,68 @@
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - environments/prod/*
+      - modules/*
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  - name: serviceConnection
+    value: 'Azure-ServiceConnection-Prod'
+  - name: workingDirectory
+    value: '$(System.DefaultWorkingDirectory)/environments/prod'
+  - name: backendResourceGroup
+    value: 'rg-terraform-state'
+  - name: backendStorageAccount
+    value: 'sttfstate<unique-suffix>'
+  - name: backendKey
+    value: 'prod/terraform.tfstate'
+
+stages:
+  - stage: Plan
+    displayName: 'Terraform Plan'
+    jobs:
+      - job: TerraformPlan
+        displayName: 'Run Terraform Plan'
+        steps:
+          - checkout: self
+
+          - template: templates/terraform-init.yml
+            parameters:
+              workingDirectory: '$(workingDirectory)'
+              backendResourceGroup: '$(backendResourceGroup)'
+              backendStorageAccount: '$(backendStorageAccount)'
+              backendKey: '$(backendKey)'
+
+          - template: templates/terraform-plan.yml
+            parameters:
+              workingDirectory: '$(workingDirectory)'
+
+  - stage: Apply
+    displayName: 'Terraform Apply'
+    dependsOn: Plan
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: TerraformApply
+        displayName: 'Apply Terraform Changes'
+        environment: 'prod'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+
+                - template: templates/terraform-init.yml
+                  parameters:
+                    workingDirectory: '$(workingDirectory)'
+                    backendResourceGroup: '$(backendResourceGroup)'
+                    backendStorageAccount: '$(backendStorageAccount)'
+                    backendKey: '$(backendKey)'
+
+                - template: templates/terraform-apply.yml
+                  parameters:
+                    workingDirectory: '$(workingDirectory)'

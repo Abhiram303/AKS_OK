@@ -1,0 +1,20 @@
+parameters:
+  - name: workingDirectory
+    type: string
+
+steps:
+  - task: DownloadPipelineArtifact@2
+    displayName: 'Download Terraform Plan'
+    inputs:
+      buildType: 'current'
+      artifactName: 'tfplan'
+      targetPath: '${{ parameters.workingDirectory }}'
+
+  - task: TerraformTaskV4@4
+    displayName: 'Terraform Apply'
+    inputs:
+      provider: 'azurerm'
+      command: 'apply'
+      workingDirectory: '${{ parameters.workingDirectory }}'
+      commandOptions: 'tfplan'
+      environmentServiceNameAzureRM: '$(serviceConnection)'
