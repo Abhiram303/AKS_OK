@@ -1,0 +1,28 @@
+{
+  "properties": {
+    "displayName": "AKS Platform Security Policy",
+    "policyType": "Custom",
+    "mode": "All",
+    "description": "Security and compliance policies for AKS platform",
+    "metadata": {
+      "category": "Kubernetes"
+    },
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "field": "type",
+            "equals": "Microsoft.ContainerService/managedClusters"
+          },
+          {
+            "field": "Microsoft.ContainerService/managedClusters/enableRBAC",
+            "equals": "false"
+          }
+        ]
+      },
+      "then": {
+        "effect": "deny"
+      }
+    }
+  }
+}

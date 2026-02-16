@@ -1,0 +1,22 @@
+parameters:
+  - name: environment
+    type: string
+  - name: serviceConnection
+    type: string
+
+steps:
+  - task: TerraformTaskV4@4
+    displayName: 'Terraform Plan'
+    inputs:
+      provider: 'azurerm'
+      command: 'plan'
+      workingDirectory: '$(System.DefaultWorkingDirectory)/environments/${{ parameters.environment }}'
+      environmentServiceNameAzureRM: '${{ parameters.serviceConnection }}'
+      commandOptions: '-out=tfplan'
+
+  - task: PublishPipelineArtifact@1
+    displayName: 'Publish Terraform Plan'
+    inputs:
+      targetPath: '$(System.DefaultWorkingDirectory)/environments/${{ parameters.environment }}/tfplan'
+      artifact: 'tfplan-${{ parameters.environment }}'
+      publishLocation: 'pipeline'
